@@ -23,6 +23,7 @@ type AppEnv struct {
 
 type ShieldInfo struct {
 	Client shield.Client
+	URL    string
 	Agent  string
 }
 
@@ -77,6 +78,7 @@ func getShieldInfo() *ShieldInfo {
 
 	return &ShieldInfo{
 		Client: cli,
+		URL:    url,
 		Agent:  agent,
 	}
 }
@@ -139,7 +141,9 @@ func protectMySQL(appName string, inst vcaptive.Instance, shieldInfo ShieldInfo)
 		os.Exit(2)
 	}
 
-	fmt.Printf("created job [%s] for target [%s]...\n", j.UUID, t.UUID)
+	fmt.Printf("created @G{%s} job with uuid [%s]...\n", j.Name, j.UUID)
+	fmt.Printf("created @G{%s} target with uuid [%s]...\n", t.Name, t.UUID)
+	fmt.Printf("Target URL: @B{%s/#!/systems/system:uuid:%s}", shieldInfo.URL, t.UUID)
 }
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
