@@ -22,12 +22,8 @@ type AppEnv struct {
 }
 
 type ShieldInfo struct {
-	Client shield.Client
-	URL    string
+	Client *shield.Client
 	Agent  string
-
-	Org   string
-	Space string
 }
 
 const mysql = "mysql"
@@ -36,53 +32,34 @@ type Plugin struct{}
 
 func getShieldInfo() *ShieldInfo {
 	fmt.Printf("Connecting to SHIELD...\n")
-	url := os.Getenv("SHIELD_URL")
-	if url == "" {
-		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD_URL not found\n")
-		os.Exit(2)
-	}
-	url = strings.TrimSuffix(url, "/")
-	fmt.Printf("  url:      @W{%s}\n", url)
-
-	username := os.Getenv("SHIELD_USERNAME")
-	if username == "" {
-		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD_USERNAME not found\n")
-		os.Exit(2)
-	}
-	fmt.Printf("  username: @W{%s}\n", username)
-
-	password := os.Getenv("SHIELD_PASSWORD")
-	if password == "" {
-		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD_PASSWORD not found\n")
-		os.Exit(2)
-	}
-	fmt.Printf("  password: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(password)))
 
 	agent := os.Getenv("SHIELD_AGENT")
 	if agent == "" {
 		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD_AGENT not found\n")
 		os.Exit(2)
 	}
-	fmt.Printf("  agent:    @W{%s}\n", agent)
 
-	cli := shield.Client{
-		URL:                os.Getenv("SHIELD_URL"),
-		Debug:              os.Getenv("SHIELD_DEBUG") == "yes",
-		Trace:              os.Getenv("SHIELD_TRACE") == "yes",
-		InsecureSkipVerify: true,
+	cli, err, found := shield.EnvConfig()
+	if !found {
+		path := fmt.Sprintf("%s/.shield", os.Getenv("HOME"))
+		config, err := shield.ReadConfig(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "@R{!!!} unable to read SHIELD configuration from %s: %s\n", path, err)
+			os.Exit(2)
+		}
+		cli, err = config.Client(os.Getenv("SHIELD_CORE")) // FIXME sort of
 	}
-	err := cli.Authenticate(&shield.LocalAuth{
-		Username: os.Getenv("SHIELD_USERNAME"),
-		Password: os.Getenv("SHIELD_PASSWORD"),
-	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD authentication failed: %s\n", err)
+		fmt.Fprintf(os.Stderr, "@R{!!!} configuration failed: %s\n", err)
+		os.Exit(2)
+	}
+	if cli == nil {
+		fmt.Fprintf(os.Stderr, "@R{!!!} configuration failed: unknown failure\n")
 		os.Exit(2)
 	}
 
 	return &ShieldInfo{
 		Client: cli,
-		URL:    url,
 		Agent:  agent,
 	}
 }
@@ -208,7 +185,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 	fmt.Printf("\n")
 	fmt.Printf("%s system @G{%s} [%s]...\n", tverb, t.Name, t.UUID)
 	fmt.Printf("%s job @G{%s} [%s]...\n", jverb, j.Name, j.UUID)
-	fmt.Printf("@B{%s/#!/systems/system:uuid:%s}\n", shieldInfo.URL, t.UUID)
+	fmt.Printf("@B{%s/#!/systems/system:uuid:%s}\n", shieldInfo.Client.URL, t.UUID)
 }
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {

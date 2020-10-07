@@ -266,8 +266,11 @@ github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/shieldcloud/shield v0.0.0-20200924141532-2ed349e37578 h1:G80H/Ma3PFpPViHBlvCtQ6NFWg+TOHsO+rz1EMURcEY=
 github.com/shieldcloud/shield v0.0.0-20200924141532-2ed349e37578/go.mod h1:gR3nZp7OiDIZ7V0bFLTUSRmHngUNqeNTm1kTup5AAPk=
+github.com/shieldcloud/shield v0.0.0-20201007145354-deeada0e75f4 h1:yRLRTICx9TdpFY4hetsN4zFOLxBYSuvYCjg4Kma6PS4=
+github.com/shieldcloud/shield v0.0.0-20201007145354-deeada0e75f4/go.mod h1:gR3nZp7OiDIZ7V0bFLTUSRmHngUNqeNTm1kTup5AAPk=
 github.com/shieldcloud/shield v0.10.9 h1:uoCy0ImQxC+J8oNByYZegaOyHyJK9j1sj6/yBH71T3Y=
 github.com/shieldcloud/shield v6.1.0+incompatible h1:9BB/XahOz04nxe4EuYX6hNi2aB0Cl6LppRYE5WZuWqw=
+github.com/shieldcloud/shield v6.1.0+incompatible/go.mod h1:5hFXiy6+7AXQeXvtbxd5t4w++bDUP6cO2E/JPkLP3eo=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
@@ -529,6 +532,7 @@ gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWD
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.4/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.3.0 h1:clyUAQHOM3G0M3f5vQj7LuJrETvjVot3Z5el9nffUtU=
 gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
