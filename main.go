@@ -11,6 +11,8 @@ import (
 	fmt "github.com/jhunt/go-ansi"
 
 	"github.com/cloudfoundry/cli/plugin"
+	"github.com/jhunt/go-cli"
+	env "github.com/jhunt/go-envirotron"
 	"github.com/jhunt/vcaptive"
 	"github.com/shieldproject/shield/client/v2/shield"
 )
@@ -21,23 +23,20 @@ type AppEnv struct {
 	} `json:"system_env_json"`
 }
 
-type ShieldInfo struct {
-	Client *shield.Client
-	Agent  string
+var opts struct {
+	Core   string `cli:"-c, --core"          env:"SHIELD_CORE"`
+	Config string `cli:"--shield-config"     env:"SHIELD_CLI_CONFIG"`
+	Agent  string `cli:"-A, --shield-agent"  env:"SHIELD_AGENT"`
+
+	Protect struct{} `cli:"protect"`
 }
 
 const mysql = "mysql"
 
 type Plugin struct{}
 
-func getShieldInfo() *ShieldInfo {
+func Connect() *shield.Client {
 	fmt.Printf("Connecting to SHIELD...\n")
-
-	agent := os.Getenv("SHIELD_AGENT")
-	if agent == "" {
-		fmt.Fprintf(os.Stderr, "@R{!!!} SHIELD_AGENT not found\n")
-		os.Exit(2)
-	}
 
 	cli, err, found := shield.EnvConfig()
 	if !found {
@@ -47,7 +46,7 @@ func getShieldInfo() *ShieldInfo {
 			fmt.Fprintf(os.Stderr, "@R{!!!} unable to read SHIELD configuration from %s: %s\n", path, err)
 			os.Exit(2)
 		}
-		cli, err = config.Client(os.Getenv("SHIELD_CORE")) // FIXME sort of
+		cli, err = config.Client(opts.Core)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} configuration failed: %s\n", err)
@@ -58,13 +57,10 @@ func getShieldInfo() *ShieldInfo {
 		os.Exit(2)
 	}
 
-	return &ShieldInfo{
-		Client: cli,
-		Agent:  agent,
-	}
+	return cli
 }
 
-func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) {
+func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
 	fmt.Printf("\n")
 	fmt.Printf("protecting @W{service} @G{%s} (mysql):\n", inst.Name)
 
@@ -93,7 +89,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 		fmt.Printf("  password: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(password)))
 	}
 
-	targets, err := shieldInfo.Client.ListTargets(&shield.TargetFilter{
+	targets, err := c.ListTargets(&shield.TargetFilter{
 		Name:  target,
 		Fuzzy: false,
 	})
@@ -114,7 +110,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 	t := &shield.Target{
 		Name:   target,
 		Plugin: "mysql",
-		Agent:  shieldInfo.Agent,
+		Agent:  opts.Agent,
 		Config: map[string]interface{}{
 			"host":     fmt.Sprintf("%s:%s", hostname, port),
 			"username": username,
@@ -124,7 +120,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 		},
 	}
 	if len(targets) == 0 {
-		t, err = shieldInfo.Client.CreateTarget(t)
+		t, err = c.CreateTarget(t)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "@R{!!!} Failed to create target: %s\n", err)
 			os.Exit(2)
@@ -132,14 +128,14 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 	} else {
 		tverb = "updated"
 		t.UUID = targets[0].UUID
-		_, err = shieldInfo.Client.UpdateTarget(t)
+		_, err = c.UpdateTarget(t)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "@R{!!!} Failed to update target: %s\n", err)
 			os.Exit(2)
 		}
 	}
 
-	jobs, err := shieldInfo.Client.ListJobs(&shield.JobFilter{
+	jobs, err := c.ListJobs(&shield.JobFilter{
 		Name:   "Daily",
 		Fuzzy:  false,
 		Target: t.UUID,
@@ -167,7 +163,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 		TargetUUID: t.UUID,
 	}
 	if len(jobs) == 0 {
-		j, err = shieldInfo.Client.CreateJob(j)
+		j, err = c.CreateJob(j)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "@R{!!!} Failed to create job: %s\n", err)
 			os.Exit(2)
@@ -175,7 +171,7 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 	} else {
 		jverb = "updated"
 		j.UUID = jobs[0].UUID
-		j, err = shieldInfo.Client.UpdateJob(j)
+		j, err = c.UpdateJob(j)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "@R{!!!} Failed to update job: %s\n", err)
 			os.Exit(2)
@@ -185,12 +181,15 @@ func protectMySQL(target string, inst vcaptive.Instance, shieldInfo ShieldInfo) 
 	fmt.Printf("\n")
 	fmt.Printf("%s system @G{%s} [%s]...\n", tverb, t.Name, t.UUID)
 	fmt.Printf("%s job @G{%s} [%s]...\n", jverb, j.Name, j.UUID)
-	fmt.Printf("@B{%s/#!/systems/system:uuid:%s}\n", shieldInfo.Client.URL, t.UUID)
+	fmt.Printf("@B{%s/#!/systems/system:uuid:%s}\n", c.URL, t.UUID)
 }
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
-	cmd := args[0]
-	if cmd == "CLI-MESSAGE-UNINSTALL" {
+	opts.Config = fmt.Sprintf("%s/.shield", os.Getenv("HOME"))
+	env.Override(&opts)
+
+	cmd, positional, err := cli.ParseArgs(&opts, args)
+	if len(positional) > 0 && strings.HasPrefix(positional[0], "CLI-") {
 		os.Exit(0)
 	}
 
@@ -199,12 +198,12 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 		os.Exit(1)
 	}
 
-	if len(args) < 2 {
+	if len(positional) < 1 {
 		fmt.Fprintf(os.Stderr, "@R{!!!} Missing required APP name\n")
 		os.Exit(1)
 	}
 
-	app, err := c.GetApp(args[1])
+	app, err := c.GetApp(positional[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
 		os.Exit(2)
@@ -268,10 +267,9 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 		os.Exit(2)
 	}
 
-	shieldInfo := getShieldInfo()
-
+	core := Connect()
 	if inst, found := services.Tagged(mysql); found {
-		protectMySQL(fmt.Sprintf("%s/%s/%s/%s", org.Name, space.Name, app.Name, inst.Name), inst, *shieldInfo)
+		protectMySQL(fmt.Sprintf("%s/%s/%s/%s", org.Name, space.Name, app.Name, inst.Name), inst, core)
 	}
 }
 

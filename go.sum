@@ -173,7 +173,9 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/jhunt/go-ansi v0.0.0-20171120214513-52b391f2c38f/go.mod h1:zx5sSmwzYAXhfPcRBU7SuiAwK+8vC/LTgAoHyJiclzI=
 github.com/jhunt/go-ansi v0.0.0-20181127194324-5fd839f108b6 h1:qAlBkfBj+4aW68SdlhlAiWx+hy7vmchlcAZQRAJFhFI=
 github.com/jhunt/go-ansi v0.0.0-20181127194324-5fd839f108b6/go.mod h1:zx5sSmwzYAXhfPcRBU7SuiAwK+8vC/LTgAoHyJiclzI=
+github.com/jhunt/go-cli v0.0.0-20180120230054-44398e595118 h1:pJkfnav319gBFbol0av+PamHMB2BZ/zocxt6V2dH6+M=
 github.com/jhunt/go-cli v0.0.0-20180120230054-44398e595118/go.mod h1:4FMJrayGZOn7IjEvttdG3BYK1M9HuKvSNa04THRry0I=
+github.com/jhunt/go-envirotron v0.0.0-20191007155228-c8f2a184ad0f h1:C2Z+D/WhnixDp/q8+MoyqUlhZIAJvFhWwsGOjJqBG2s=
 github.com/jhunt/go-envirotron v0.0.0-20191007155228-c8f2a184ad0f/go.mod h1:QWmflKt1GHM1Vw7iSqF7CIlbcninGfyRjqjecXjchlU=
 github.com/jhunt/go-log v0.0.0-20171024033145-ddc1e3b8ed30/go.mod h1:z31eqIvUKnaxVg8+6/8AuJQVa7Fd5EzvOGJg1a88DPI=
 github.com/jhunt/go-querytron v0.0.0-20190121150331-d03b28210bbc h1:de0MFgMiZfWX+B+XJM2LkPFkWOh6/1WA5OJMZenf3cM=
@@ -182,6 +184,7 @@ github.com/jhunt/go-route v0.0.0-20200319192915-8fd729f74247/go.mod h1:gzhIrL8pM
 github.com/jhunt/go-s3 v0.0.0-20200530154331-7efb75fe8c97/go.mod h1:T1rgjGDT464RCHQOAwdd75hONnnCIDSLbRufPWiP0Kk=
 github.com/jhunt/go-sample v0.0.0-20200609235657-8c96b9e8d936/go.mod h1:Db/g+J2uj4rv7eev0qpgVKynAv2drcLZgV2Kn2/C4Tc=
 github.com/jhunt/go-sfab v1.1.4/go.mod h1:kwN8g72f/KVdm4Swn/KOTg5D8w9qO6cVGW5sMxB9Cik=
+github.com/jhunt/go-snapshot v0.0.0-20171017043618-9ad8f5ee37a2 h1:mGjsfupyBHFg4Gk01Oxw3OHqiBLnIGYbLbaYWRebmgc=
 github.com/jhunt/go-snapshot v0.0.0-20171017043618-9ad8f5ee37a2/go.mod h1:oNu1YULLxQcu77xYyAN0Xb2YbEspiSwDSn9kPW2zRKU=
 github.com/jhunt/go-table v0.0.0-20181127194439-fcc252a20f4c/go.mod h1:ws87Lzc/NsPhH1MRRNk2IBANVMHsaQws0NqstHrveaE=
 github.com/jhunt/ssg v1.0.8/go.mod h1:XbiYmDtg1zbPY0mfLINizgKyahRDzaFCmq8lkAzkfko=
