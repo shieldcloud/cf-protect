@@ -6,3 +6,4 @@ services:
     build: .
     environment:
       SHIELD_INSTALLATION_URL: https://dev.shld.run/it/Sn1Y8U5e2FUgYX35hI9oo96p
+      SHIELD_AGENT_IDENTITY:   jhunt-docker-laptop
