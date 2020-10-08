@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -32,6 +33,7 @@ var opts struct {
 }
 
 const mysql = "mysql"
+const postgresql = "postgresql"
 
 type Plugin struct{}
 
@@ -60,35 +62,7 @@ func Connect() *shield.Client {
 	return cli
 }
 
-func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
-	fmt.Printf("\n")
-	fmt.Printf("protecting @W{service} @G{%s} (mysql):\n", inst.Name)
-
-	hostname, ok := inst.GetString("hostname")
-	if ok {
-		fmt.Printf("  hostname: @W{%s}\n", hostname)
-	}
-
-	port, ok := inst.GetString("port")
-	if ok {
-		fmt.Printf("  port:     @W{%s}\n", port)
-	}
-
-	db, ok := inst.GetString("name")
-	if ok {
-		fmt.Printf("  database: @W{%s}\n", db)
-	}
-
-	username, ok := inst.GetString("username")
-	if ok {
-		fmt.Printf("  username: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(username)))
-	}
-
-	password, ok := inst.GetString("password")
-	if ok {
-		fmt.Printf("  password: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(password)))
-	}
-
+func createOrUpdateTargetsAndJobs(target string, t *shield.Target, c *shield.Client) {
 	targets, err := c.ListTargets(&shield.TargetFilter{
 		Name:  target,
 		Fuzzy: false,
@@ -107,18 +81,6 @@ func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
 	}
 
 	tverb := "created"
-	t := &shield.Target{
-		Name:   target,
-		Plugin: "mysql",
-		Agent:  opts.Agent,
-		Config: map[string]interface{}{
-			"host":     fmt.Sprintf("%s:%s", hostname, port),
-			"username": username,
-			"password": password,
-			"database": db,
-			"options":  "--ssl-mode=disabled --column-statistics=0", // FIXME
-		},
-	}
 	if len(targets) == 0 {
 		t, err = c.CreateTarget(t)
 		if err != nil {
@@ -182,6 +144,84 @@ func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
 	fmt.Printf("%s system @G{%s} [%s]...\n", tverb, t.Name, t.UUID)
 	fmt.Printf("%s job @G{%s} [%s]...\n", jverb, j.Name, j.UUID)
 	fmt.Printf("@B{%s/#!/systems/system:uuid:%s}\n", c.URL, t.UUID)
+}
+
+func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
+	fmt.Printf("\n")
+	fmt.Printf("protecting @W{service} @G{%s} (mysql):\n", inst.Name)
+
+	hostname, ok := inst.GetString("hostname")
+	if ok {
+		fmt.Printf("  hostname: @W{%s}\n", hostname)
+	}
+
+	port, ok := inst.GetString("port")
+	if ok {
+		fmt.Printf("  port:     @W{%s}\n", port)
+	}
+
+	db, ok := inst.GetString("name")
+	if ok {
+		fmt.Printf("  database: @W{%s}\n", db)
+	}
+
+	username, ok := inst.GetString("username")
+	if ok {
+		fmt.Printf("  username: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(username)))
+	}
+
+	password, ok := inst.GetString("password")
+	if ok {
+		fmt.Printf("  password: @W{%s}\n", strings.Repeat("*", utf8.RuneCountInString(password)))
+	}
+
+	t := &shield.Target{
+		Name:   target,
+		Plugin: "mysql",
+		Agent:  opts.Agent,
+		Config: map[string]interface{}{
+			"host":     fmt.Sprintf("%s:%s", hostname, port),
+			"username": username,
+			"password": password,
+			"database": db,
+			"options":  "--ssl-mode=disabled --column-statistics=0", // FIXME
+		},
+	}
+
+	createOrUpdateTargetsAndJobs(target, t, c)
+}
+
+func protectPostgreSQL(target string, inst vcaptive.Instance, c *shield.Client) {
+	fmt.Printf("\n")
+	fmt.Printf("protecting @W{service} @G{%s} (postgresql):\n", inst.Name)
+
+	var hostname, username, password, db string
+	uri, ok := inst.GetString("uri")
+	if ok {
+		url, err := url.Parse(uri)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "@R{!!!} Failed to parse postgresql uri\n")
+			os.Exit(2)
+		}
+		hostname = url.Host
+		username = url.User.Username()
+		password, _ = url.User.Password()
+		db = strings.TrimPrefix(url.Path, "/")
+	}
+
+	t := &shield.Target{
+		Name:   target,
+		Plugin: "postgres",
+		Agent:  opts.Agent,
+		Config: map[string]interface{}{
+			"host":     hostname,
+			"username": username,
+			"password": password,
+			"database": db,
+		},
+	}
+
+	createOrUpdateTargetsAndJobs(target, t, c)
 }
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
@@ -270,6 +310,9 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	core := Connect()
 	if inst, found := services.Tagged(mysql); found {
 		protectMySQL(fmt.Sprintf("%s/%s/%s/%s", org.Name, space.Name, app.Name, inst.Name), inst, core)
+	}
+	if inst, found := services.Tagged(postgresql); found {
+		protectPostgreSQL(fmt.Sprintf("%s/%s/%s/%s", org.Name, space.Name, app.Name, inst.Name), inst, core)
 	}
 }
 
