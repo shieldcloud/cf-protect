@@ -15,7 +15,7 @@ import (
 	"github.com/jhunt/go-cli"
 	env "github.com/jhunt/go-envirotron"
 	"github.com/jhunt/vcaptive"
-	"github.com/shieldproject/shield/client/v2/shield"
+	"github.com/shieldcloud/client/v2/shield"
 )
 
 type AppEnv struct {
