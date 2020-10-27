@@ -12,7 +12,7 @@ regularly scheduled backups of those data systems.
 
 Here's an example:
 
-```shell
+```
 $ cf apps
 name   requested state   instances   memory   disk   urls
 todo   started           1/1         64M      1G     todo.cfapps.io
@@ -41,7 +41,7 @@ created job Daily [86677ee8-e63f-4eb4-baf6-c5130c9404a1]...
 The easiest way to install this plugin for your CF CLI is to use
 our public repository:
 
-```shell
+```
 $ cf add-plugin-repo starkandwayne https://cf.pub.starkandwayne.com/
 https://cf.pub.starkandwayne.com/ added as starkandwayne
 
@@ -53,7 +53,7 @@ Attention: Plugins are binaries written by potentially untrusted authors.
 Install and use plugins at your own risk.
 Do you want to uninstall the existing plugin and install protect 0.0.1? [yN]: y
 Starting download of plugin binary from repository starkandwayne...
- 11.16 MiB / 11.16 MiB [========================================================================================================================================================================] 100.00% 3s
+ 11.16 MiB / 11.16 MiB [===========================================] 100.00% 3s
 Installing plugin protect...
 OK
 
