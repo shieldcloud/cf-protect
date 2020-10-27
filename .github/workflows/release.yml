@@ -1,0 +1,93 @@
+---
+on: 
+  push:
+    tags: [ 'rc*' ]
+
+jobs:
+  release:
+    name: Release cf-protect
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.14.0'
+
+      - name: get version
+        id:   version
+        uses: frabert/replace-string-action@v1.1
+        with:
+          pattern:      '^refs.tags.rc'
+          string:       ${{ github.ref }}
+          replace-with: ''
+
+
+      - name: build plugin binaries
+        run: |
+          make VERSION=${{ steps.version.outputs.replaced }} release
+
+      - name: github release
+        id:   release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        with:
+          tag_name:     v${{ steps.version.outputs.replaced }}
+          commitish:    master
+          release_name: CF Protect (SHIELD) v${{ steps.version.outputs.replaced }}
+          draft:        false
+          prerelease:   false
+          body: |
+            _one of the core devs really ought to update these release notes..._
+
+      - name: upload cf-protect.linux64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: cf-protect.linux64
+          asset_name: cf-protect.linux64
+          asset_content_type: application/octet-stream
+
+      - name: upload cf-protect.linux32
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: cf-protect.linux32
+          asset_name: cf-protect.linux32
+          asset_content_type: application/octet-stream
+
+      - name: upload cf-protect.darwin64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: cf-protect.darwin64
+          asset_name: cf-protect.darwin64
+          asset_content_type: application/octet-stream
+
+      - name: upload cf-protect.win32
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: cf-protect.win32
+          asset_name: cf-protect.win32
+          asset_content_type: application/octet-stream
+
+      - name: upload cf-protect.win64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: cf-protect.win64
+          asset_name: cf-protect.win64
+          asset_content_type: application/octet-stream
