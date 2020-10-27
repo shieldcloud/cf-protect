@@ -48,13 +48,30 @@ $ cf install-plugin -r starkandwayne cf-protect
 
 If you'd prefer to compile it form source, you are welcome to do
 that as well.  Just clone this git repository from GitHub
-(<https://github.com/shieldcloud/cf-protect>), and run `make cf`:
+(<https://github.com/shieldcloud/cf-protect>), and run `make
+install`:
 
 ```shell
 $ git clone https://github.com/shieldcloud/cf-protect
 $ cd cf-protect
-$ make cf
+
+$ make install
+cf uninstall-plugin protect || true
+Plugin protect does not exist.
+FAILED
+yes | cf install-plugin cf-protect
+Attention: Plugins are binaries written by potentially untrusted authors.
+Install and use plugins at your own risk.
+Do you want to install the plugin cf-protect? [yN]: y
+Installing plugin protect...
+OK
+
+Plugin protect N/A successfully installed.
 ```
+
+_Note:_ the `make install` target tries to uninstall the plugin,
+which will always fail if this is your first time installing.
+That's okay!
 
 ## Usage
 

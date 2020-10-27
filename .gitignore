@@ -1,1 +1,4 @@
 /cf-protect
+/cf-protect.linux*
+/cf-protect.darwin*
+/cf-protect.win*
