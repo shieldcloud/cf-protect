@@ -43,7 +43,21 @@ our public repository:
 
 ```shell
 $ cf add-plugin-repo starkandwayne https://cf.pub.starkandwayne.com/
+https://cf.pub.starkandwayne.com/ added as starkandwayne
+
 $ cf install-plugin -r starkandwayne cf-protect
+→  cf install-plugin -r starkandwayne protect
+Searching starkandwayne for plugin protect...
+Plugin protect 0.0.1 found in: starkandwayne
+Attention: Plugins are binaries written by potentially untrusted authors.
+Install and use plugins at your own risk.
+Do you want to uninstall the existing plugin and install protect 0.0.1? [yN]: y
+Starting download of plugin binary from repository starkandwayne...
+ 11.16 MiB / 11.16 MiB [========================================================================================================================================================================] 100.00% 3s
+Installing plugin protect...
+OK
+
+Plugin protect 0.0.1 successfully installed.
 ```
 
 If you'd prefer to compile it form source, you are welcome to do
