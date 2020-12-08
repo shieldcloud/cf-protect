@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -27,9 +29,11 @@ type AppEnv struct {
 var opts struct {
 	Core   string `cli:"-c, --core"          env:"SHIELD_CORE"`
 	Config string `cli:"--shield-config"     env:"SHIELD_CLI_CONFIG"`
-	Agent  string `cli:"-A, --shield-agent"  env:"SHIELD_AGENT"`
+	Agent  string `cli:"-A, --agent"  env:"SHIELD_AGENT"`
 
-	Protect struct{} `cli:"protect"`
+	Protect struct {
+		For string `cli:"--for" env:"CF_PROTECT_FOR"`
+	} `cli:"protect"`
 }
 
 const mysql = "mysql"
@@ -119,7 +123,7 @@ func createOrUpdateTargetsAndJobs(target string, t *shield.Target, c *shield.Cli
 	j := &shield.Job{
 		Name:       "Daily",
 		Schedule:   "daily 4am",
-		Retain:     "4d",
+		Retain:     opts.Protect.For,
 		Paused:     true,
 		Bucket:     "storage",
 		TargetUUID: t.UUID,
@@ -155,14 +159,36 @@ func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
 		fmt.Printf("  hostname: @W{%s}\n", hostname)
 	}
 
+	if hostname == "" {
+		hostname, ok = inst.GetString("host")
+		if ok {
+			fmt.Printf("  hostname: @W{%s}\n", hostname)
+		}
+	}
+
 	port, ok := inst.GetString("port")
 	if ok {
 		fmt.Printf("  port:     @W{%s}\n", port)
 	}
 
+	if port == "" {
+		p, ok := inst.GetUint("port")
+		if ok {
+			port = fmt.Sprintf("%d", p)
+			fmt.Printf("  port:     @W{%s}\n", port)
+		}
+	}
+
 	db, ok := inst.GetString("name")
 	if ok {
 		fmt.Printf("  database: @W{%s}\n", db)
+	}
+
+	if db == "" {
+		db, ok = inst.GetString("database")
+		if ok {
+			fmt.Printf("  database: @W{%s}\n", db)
+		}
 	}
 
 	username, ok := inst.GetString("username")
@@ -226,6 +252,7 @@ func protectPostgreSQL(target string, inst vcaptive.Instance, c *shield.Client) 
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	opts.Config = fmt.Sprintf("%s/.shield", os.Getenv("HOME"))
+	opts.Protect.For = "4d"
 	env.Override(&opts)
 
 	cmd, positional, err := cli.ParseArgs(&opts, args)
@@ -255,6 +282,12 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 		os.Exit(2)
 	}
 
+	skipTls, err := c.IsSSLDisabled()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
+		os.Exit(2)
+	}
+
 	tok, err := c.AccessToken()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
@@ -270,7 +303,21 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	}
 	req.Header.Set("Authorization", tok)
 
-	res, err := http.DefaultClient.Do(req)
+	certs, err := x509.SystemCertPool()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
+		os.Exit(2)
+	}
+
+	ua := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: skipTls,
+				RootCAs:            certs,
+			},
+		},
+	}
+	res, err := ua.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
 		os.Exit(2)
