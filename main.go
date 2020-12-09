@@ -29,7 +29,9 @@ var opts struct {
 	Config string `cli:"--shield-config"     env:"SHIELD_CLI_CONFIG"`
 	Agent  string `cli:"-A, --shield-agent"  env:"SHIELD_AGENT"`
 
-	Protect struct{} `cli:"protect"`
+	Protect struct {
+		For string `cli:"--for" env:"CF_PROTECT_FOR"`
+	} `cli:"protect"`
 }
 
 const mysql = "mysql"
@@ -119,7 +121,7 @@ func createOrUpdateTargetsAndJobs(target string, t *shield.Target, c *shield.Cli
 	j := &shield.Job{
 		Name:       "Daily",
 		Schedule:   "daily 4am",
-		Retain:     "4d",
+		Retain:     opts.Protect.For,
 		Paused:     true,
 		Bucket:     "storage",
 		TargetUUID: t.UUID,
@@ -226,6 +228,7 @@ func protectPostgreSQL(target string, inst vcaptive.Instance, c *shield.Client) 
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	opts.Config = fmt.Sprintf("%s/.shield", os.Getenv("HOME"))
+	opts.Protect.For = "4d"
 	env.Override(&opts)
 
 	cmd, positional, err := cli.ParseArgs(&opts, args)
