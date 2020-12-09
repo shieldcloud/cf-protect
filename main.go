@@ -25,9 +25,9 @@ type AppEnv struct {
 }
 
 var opts struct {
-	Core   string `cli:"-c, --core"          env:"SHIELD_CORE"`
-	Config string `cli:"--shield-config"     env:"SHIELD_CLI_CONFIG"`
-	Agent  string `cli:"-A, --shield-agent"  env:"SHIELD_AGENT"`
+	Core   string `cli:"-c, --core"      env:"SHIELD_CORE"`
+	Config string `cli:"--shield-config" env:"SHIELD_CLI_CONFIG"`
+	Agent  string `cli:"-A, --agent"     env:"SHIELD_AGENT"`
 
 	Protect struct{} `cli:"protect"`
 }
