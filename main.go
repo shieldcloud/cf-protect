@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -255,6 +257,12 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 		os.Exit(2)
 	}
 
+	skipTls, err := c.IsSSLDisabled()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
+		os.Exit(2)
+	}
+
 	tok, err := c.AccessToken()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
@@ -270,7 +278,21 @@ func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	}
 	req.Header.Set("Authorization", tok)
 
-	res, err := http.DefaultClient.Do(req)
+	certs, err := x509.SystemCertPool()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
+		os.Exit(2)
+	}
+
+	ua := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: skipTls,
+				RootCAs:            certs,
+			},
+		},
+	}
+	res, err := ua.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!!} %s\n", err)
 		os.Exit(2)
