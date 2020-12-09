@@ -30,7 +30,10 @@ var opts struct {
 	Agent  string `cli:"-A, --shield-agent"  env:"SHIELD_AGENT"`
 
 	Protect struct {
-		For string `cli:"--for" env:"CF_PROTECT_FOR"`
+		For      string `cli:"--for"      env:"CF_PROTECT_FOR"`
+		At       string `cli:"--at"       env:"CF_PROTECT_AT"`
+		Name     string `cli:"--name"     env:"CF_PROTECT_JOB_NAME"`
+		Unpaused bool   `cli:"--unpaused" env:"CF_PROTECT_UNPAUSED"`
 	} `cli:"protect"`
 }
 
@@ -119,10 +122,10 @@ func createOrUpdateTargetsAndJobs(target string, t *shield.Target, c *shield.Cli
 
 	jverb := "created"
 	j := &shield.Job{
-		Name:       "Daily",
-		Schedule:   "daily 4am",
+		Name:       opts.Protect.Name,
+		Schedule:   opts.Protect.At,
 		Retain:     opts.Protect.For,
-		Paused:     true,
+		Paused:     !opts.Protect.Unpaused,
 		Bucket:     "storage",
 		TargetUUID: t.UUID,
 	}
@@ -228,7 +231,10 @@ func protectPostgreSQL(target string, inst vcaptive.Instance, c *shield.Client) 
 
 func (p Plugin) Run(c plugin.CliConnection, args []string) {
 	opts.Config = fmt.Sprintf("%s/.shield", os.Getenv("HOME"))
+	opts.Protect.Name = "Daily"
 	opts.Protect.For = "4d"
+	opts.Protect.At = "daily 4am"
+	opts.Protect.Unpaused = false
 	env.Override(&opts)
 
 	cmd, positional, err := cli.ParseArgs(&opts, args)
