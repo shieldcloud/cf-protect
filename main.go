@@ -157,14 +157,36 @@ func protectMySQL(target string, inst vcaptive.Instance, c *shield.Client) {
 		fmt.Printf("  hostname: @W{%s}\n", hostname)
 	}
 
+	if hostname == "" {
+		hostname, ok = inst.GetString("host")
+		if ok {
+			fmt.Printf("  hostname: @W{%s}\n", hostname)
+		}
+	}
+
 	port, ok := inst.GetString("port")
 	if ok {
 		fmt.Printf("  port:     @W{%s}\n", port)
 	}
 
+	if port == "" {
+		p, ok := inst.GetUint("port")
+		if ok {
+			port = fmt.Sprintf("%d", p)
+			fmt.Printf("  port:     @W{%s}\n", port)
+		}
+	}
+
 	db, ok := inst.GetString("name")
 	if ok {
 		fmt.Printf("  database: @W{%s}\n", db)
+	}
+
+	if db == "" {
+		db, ok = inst.GetString("database")
+		if ok {
+			fmt.Printf("  database: @W{%s}\n", db)
+		}
 	}
 
 	username, ok := inst.GetString("username")
